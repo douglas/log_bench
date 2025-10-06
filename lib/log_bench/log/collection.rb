@@ -11,10 +11,6 @@ module LogBench
         self.entries = parse_input(input)
       end
 
-      def each(&block)
-        entries.each(&block)
-      end
-
       def size
         entries.size
       end
@@ -24,7 +20,11 @@ module LogBench
       end
 
       def requests
-        entries.select { |entry| entry.is_a?(Request) }
+        entries.select { |entry| entry.is_a?(Request) && !entry.orphan }
+      end
+
+      def orphan_requests
+        entries.select { |entry| entry.is_a?(Request) && entry.orphan }
       end
 
       def filter_by_method(method)
@@ -55,10 +55,6 @@ module LogBench
       def sort_by_timestamp
         sorted_requests = requests.sort_by(&:timestamp)
         create_collection_from_requests(sorted_requests)
-      end
-
-      def to_a
-        entries
       end
 
       private
