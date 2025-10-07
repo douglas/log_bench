@@ -98,7 +98,8 @@ module LogBench
       end
 
       def setup_sidekiq_middleware
-        # Use Sidekiq's built-in CurrentAttributes middleware
+        return unless defined?(Sidekiq)
+
         require "sidekiq/middleware/current_attributes"
         Sidekiq::CurrentAttributes.persist("LogBench::Current")
       end
