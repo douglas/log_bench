@@ -8,6 +8,7 @@ module LogBench
   # JSON logs. Extends TaggedLogging::Formatter for full Rails compatibility.
   class JsonFormatter < ::Logger::Formatter
     include ActiveSupport::TaggedLogging::Formatter
+    include JobPrefixFormatter
 
     def call(severity, timestamp, progname, message)
       log_entry = build_log_entry(severity, timestamp, progname, message)
@@ -24,6 +25,15 @@ module LogBench
       tags = current_tags
       entry = parse_lograge_message(entry[:message]) if lograge_message?(entry)
       request_id = current_request_id
+
+      # Get job info from Current attributes (direct Sidekiq jobs) or tags (ActiveJob)
+      job_id, job_class = get_job_info(tags)
+
+      # Add colored job prefix to message if we're in a job context
+      if job_id && job_class && entry[:message]
+        job_prefix = build_colored_job_prefix(job_class, job_id)
+        entry[:message] = "#{job_prefix} #{entry[:message]}"
+      end
 
       base_entry = {
         level: severity,
@@ -74,19 +84,50 @@ module LogBench
     end
 
     def current_request_id
-      request_id = nil
+      get_current_attribute(:request_id)
+    end
 
-      if defined?(LogBench::Current) && LogBench::Current.respond_to?(:request_id)
-        request_id = LogBench::Current.request_id
-      elsif defined?(Current) && Current.respond_to?(:request_id)
-        request_id = Current.request_id
-      elsif defined?(RequestStore) && RequestStore.exist?(:request_id)
-        request_id = RequestStore.read(:request_id)
-      elsif Thread.current[:request_id]
-        request_id = Thread.current[:request_id]
+    def current_jid
+      get_current_attribute(:jid)
+    end
+
+    def current_job_class
+      get_current_attribute(:job_class)
+    end
+
+    # Generic method to get current attributes from various storage mechanisms
+    def get_current_attribute(attribute_name)
+      # Try LogBench::Current first (preferred)
+      if defined?(LogBench::Current) && LogBench::Current.respond_to?(attribute_name)
+        return LogBench::Current.public_send(attribute_name)
       end
 
-      request_id
+      # Try Current (fallback for apps that define their own Current)
+      if defined?(Current) && Current.respond_to?(attribute_name)
+        return Current.public_send(attribute_name)
+      end
+
+      # Try RequestStore (for apps using request_store gem)
+      if defined?(RequestStore) && RequestStore.exist?(attribute_name)
+        return RequestStore.read(attribute_name)
+      end
+
+      # Try Thread local storage (last resort)
+      Thread.current[attribute_name]
+    end
+
+    # Get job info from Current attributes (direct Sidekiq jobs) or tags (ActiveJob)
+    def get_job_info(tags)
+      # First try Current attributes (for direct Sidekiq jobs)
+      current_jid = get_current_attribute(:jid)
+      current_job_class = get_current_attribute(:job_class)
+
+      if current_jid && current_job_class
+        return [current_jid, current_job_class]
+      end
+
+      # Fallback to tags (for ActiveJob)
+      extract_job_info_from_tags(tags)
     end
   end
 end

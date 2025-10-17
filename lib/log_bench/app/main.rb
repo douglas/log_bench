@@ -19,7 +19,7 @@ module LogBench
 
       def initialize(log_file_path = "log/development.log")
         self.log_file_path = find_log_file(log_file_path)
-        self.state = State.new
+        self.state = State.instance
         validate_log_file!
       end
 

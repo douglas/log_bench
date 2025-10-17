@@ -8,6 +8,7 @@ module LogBench
       attr_accessor :entries
 
       def initialize(input)
+        self.parsed_entries = nil
         self.entries = parse_input(input)
       end
 
@@ -59,6 +60,8 @@ module LogBench
 
       private
 
+      attr_accessor :parsed_entries
+
       def create_collection_from_requests(requests)
         new_collection = self.class.new([])
         new_collection.entries = requests
@@ -67,7 +70,7 @@ module LogBench
 
       def parse_input(input)
         lines = normalize_input(input)
-        parsed_entries = Parser.parse_lines(lines)
+        self.parsed_entries = Parser.parse_lines(lines)
         Parser.group_by_request(parsed_entries)
       end
 
