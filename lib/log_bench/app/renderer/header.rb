@@ -41,7 +41,8 @@ module LogBench
         def draw_title
           header_win.setpos(1, TITLE_X_OFFSET)
           header_win.attron(color_pair(HEADER_CYAN) | A_BOLD) { header_win.addstr(APP_NAME) }
-          header_win.addstr(" - #{APP_SUBTITLE} #{VERSION}")
+          logger_type = LogBench.configuration&.logger_type || :lograge
+          header_win.addstr(" - #{APP_SUBTITLE} #{VERSION} (#{logger_type})")
         end
 
         def draw_file_name
