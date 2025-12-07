@@ -4,16 +4,16 @@ module LogBench
   module Log
     module Parsers
       class SemanticLoggerParser
-        TIMESTAMP_PATTERN = /^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+)/.freeze
-        REQUEST_ID_PATTERN = /request_id:\s*([a-f0-9\-]+)/.freeze
-        DURATION_PATTERN = /\(([0-9.]+)(ms|s)\)/.freeze
-        COMPLETED_DATA_PATTERN = /--\s+Completed\s+#\w+\s+--\s+\{(.+)\}\s*$/.freeze
-        RUBY_LOGGER_WRAPPER_PATTERN = /^[A-Z], \[[^\]]+\]\s+[A-Z]+\s+--\s*:\s*/.freeze
-        ANSI_CODE_PATTERN = /\e\[[0-9;]*m/.freeze
-        LITERAL_ANSI_PATTERN = /\[[0-9;]*m/.freeze
+        TIMESTAMP_PATTERN = /^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+)/
+        REQUEST_ID_PATTERN = /request_id:\s*([a-f0-9\-]+)/
+        DURATION_PATTERN = /\(([0-9.]+)(ms|s)\)/
+        COMPLETED_DATA_PATTERN = /--\s+Completed\s+#\w+\s+--\s+\{(.+)\}\s*$/
+        RUBY_LOGGER_WRAPPER_PATTERN = /^[A-Z], \[[^\]]+\]\s+[A-Z]+\s+--\s*:\s*/
+        ANSI_CODE_PATTERN = /\e\[[0-9;]*m/
+        LITERAL_ANSI_PATTERN = /\[[0-9;]*m/
 
-        HUMAN_READABLE_PATTERN_1 = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+.*?\s+\[.*?\]\s+.*?--\s+/.freeze
-        HUMAN_READABLE_PATTERN_2 = /^[A-Z], \[.*?\].*?--\s*:\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+/.freeze
+        HUMAN_READABLE_PATTERN_1 = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+.*?\s+\[.*?\]\s+.*?--\s+/
+        HUMAN_READABLE_PATTERN_2 = /^[A-Z], \[.*?\].*?--\s*:\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+/
 
         LEVEL_MAP = {
           "T" => "trace",
@@ -114,7 +114,7 @@ module LogBench
 
             value = match[1].to_f
             unit = match[2]
-            unit == "s" ? value * 1000.0 : value
+            (unit == "s") ? value * 1000.0 : value
           end
 
           def extract_from_completed_hash(line, key)

@@ -818,10 +818,10 @@ class TestLogBench < Minitest::Test
   end
 
   def test_wrapped_format_detection
-    wrapped_line = 'I, [2025-11-20T15:51:32.434612 #161]  INFO -- : 2025-11-20 15:51:32.434402 [36mI[0m [161:puma] [36mRails[0m -- Test'
+    wrapped_line = "I, [2025-11-20T15:51:32.434612 #161]  INFO -- : 2025-11-20 15:51:32.434402 [36mI[0m [161:puma] [36mRails[0m -- Test"
     assert LogBench::Log::Parsers::SemanticLoggerParser.human_readable?(wrapped_line)
 
-    unwrapped_line = '2025-11-20 15:51:32.434402 [36mI[0m [161:puma] [36mRails[0m -- Test'
+    unwrapped_line = "2025-11-20 15:51:32.434402 [36mI[0m [161:puma] [36mRails[0m -- Test"
     assert LogBench::Log::Parsers::SemanticLoggerParser.human_readable?(unwrapped_line)
 
     json_line = '{"timestamp":"2025-01-01T10:00:00Z","message":"test"}'
@@ -839,7 +839,7 @@ class TestLogBench < Minitest::Test
   end
 
   def test_request_id_extraction_from_tags
-    line_with_tags = '2025-11-19 23:55:26.075679 [32mD[0m [1176:puma] {[32mrequest_id: 710d8f41-356b-4f00-8b9d-d3d341b3d145[0m, [32mmethod: GET[0m]} [32mRack[0m -- Started'
+    line_with_tags = "2025-11-19 23:55:26.075679 [32mD[0m [1176:puma] {[32mrequest_id: 710d8f41-356b-4f00-8b9d-d3d341b3d145[0m, [32mmethod: GET[0m]} [32mRack[0m -- Started"
 
     LogBench.setup { |config| config.logger_type = :semantic_logger }
     entry = LogBench::Log::Parser.parse_line(line_with_tags)

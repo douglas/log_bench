@@ -7,8 +7,8 @@ module LogBench
         include Curses
 
         # Application info
-        APP_NAME = 'LogBench'
-        APP_SUBTITLE = 'Rails Log Viewer'
+        APP_NAME = "LogBench"
+        APP_SUBTITLE = "Rails Log Viewer"
         VERSION = "(v#{LogBench::VERSION})"
 
         # Layout constants
@@ -58,14 +58,14 @@ module LogBench
             stats_text = "#{filtered_requests.size} found (#{total_requests} total)"
             header_win.setpos(1, screen.width - stats_text.length - 2)
             header_win.attron(color_pair(3)) { header_win.addstr(filtered_requests.size.to_s) }
-            header_win.addstr(' found (')
+            header_win.addstr(" found (")
             header_win.attron(color_pair(3)) { header_win.addstr(total_requests.to_s) }
-            header_win.addstr(' total)')
+            header_win.addstr(" total)")
           else
             # No filter active - show simple count
             stats_text = "Requests: #{total_requests}"
             header_win.setpos(1, screen.width - stats_text.length - 2)
-            header_win.addstr('Requests: ')
+            header_win.addstr("Requests: ")
             header_win.attron(color_pair(3)) { header_win.addstr(total_requests.to_s) }
           end
         end
@@ -73,20 +73,20 @@ module LogBench
         def draw_help_text
           header_win.setpos(2, 2)
           header_win.attron(A_DIM) do
-            header_win.addstr('a:Auto-scroll(')
-            header_win.attron(color_pair(3)) { header_win.addstr(state.auto_scroll ? 'ON' : 'OFF') }
-            header_win.addstr(') | f:Filter | c:Clear filter | s:Sort(')
+            header_win.addstr("a:Auto-scroll(")
+            header_win.attron(color_pair(3)) { header_win.addstr(state.auto_scroll ? "ON" : "OFF") }
+            header_win.addstr(") | f:Filter | c:Clear filter | s:Sort(")
             header_win.attron(color_pair(3)) { header_win.addstr(state.sort.display_name) }
-            header_win.addstr(') | t:Text selection(')
-            header_win.attron(color_pair(3)) { header_win.addstr(state.text_selection_mode? ? 'ON' : 'OFF') }
-            header_win.addstr(') | q:Quit')
+            header_win.addstr(") | t:Text selection(")
+            header_win.attron(color_pair(3)) { header_win.addstr(state.text_selection_mode? ? "ON" : "OFF") }
+            header_win.addstr(") | q:Quit")
           end
 
           header_win.setpos(3, 2)
           header_win.attron(A_DIM) do
-            header_win.addstr('←→/hl:Pane | ↑↓/jk:Navigate | g/G:Top/End | y:Copy highlighted | Ctrl+L:Clear | Ctrl+R:Restore(')
-            header_win.attron(color_pair(3)) { header_win.addstr(state.can_undo_clear? ? 'READY' : 'N/A') }
-            header_win.addstr(')')
+            header_win.addstr("←→/hl:Pane | ↑↓/jk:Navigate | g/G:Top/End | y:Copy highlighted | Ctrl+L:Clear | Ctrl+R:Restore(")
+            header_win.attron(color_pair(3)) { header_win.addstr(state.can_undo_clear? ? "READY" : "N/A") }
+            header_win.addstr(")")
           end
         end
 
