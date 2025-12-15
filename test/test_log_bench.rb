@@ -148,6 +148,36 @@ class TestLogBench < Minitest::Test
     assert_respond_to validator, :validate_rails_config!
   end
 
+  def test_configuration_validator_returns_true_when_disabled
+    # When LogBench is disabled, validation should pass without checking logger config
+    LogBench.setup { |config| config.enabled = false }
+
+    validator = LogBench::ConfigurationValidator.new
+    assert validator.validate_rails_config!
+  ensure
+    LogBench.setup { |config| config.enabled = true }
+  end
+
+  def test_configuration_validator_error_configs_are_frozen
+    # Error configs should be immutable
+    assert LogBench::ConfigurationValidator::LOGRAGE_ERROR_CONFIGS.frozen?
+    assert LogBench::ConfigurationValidator::SEMANTIC_LOGGER_ERROR_CONFIGS.frozen?
+  end
+
+  def test_configuration_validator_lograge_errors_have_required_fields
+    LogBench::ConfigurationValidator::LOGRAGE_ERROR_CONFIGS.each do |key, config|
+      assert config[:title], "Lograge error #{key} should have a title"
+      assert config[:description], "Lograge error #{key} should have a description"
+    end
+  end
+
+  def test_configuration_validator_semantic_logger_errors_have_required_fields
+    LogBench::ConfigurationValidator::SEMANTIC_LOGGER_ERROR_CONFIGS.each do |key, config|
+      assert config[:title], "SemanticLogger error #{key} should have a title"
+      assert config[:description], "SemanticLogger error #{key} should have a description"
+    end
+  end
+
   def test_json_formatter_implements_rails_logger_interface
     formatter = LogBench::JsonFormatter.new
 
