@@ -73,8 +73,11 @@ module LogBench
       end
 
       def check_for_updates
-        latest_version = VersionChecker.check_for_update
-        state.set_update_available(latest_version) if latest_version
+        # Run version check in background thread to avoid blocking startup
+        Thread.new do
+          latest_version = VersionChecker.check_for_update
+          state.set_update_available(latest_version) if latest_version
+        end
       end
 
       def initial_draw
