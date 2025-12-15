@@ -15,6 +15,10 @@ module LogBench
         HUMAN_READABLE_PATTERN_1 = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\s+.*?\s+\[.*?\]\s+.*?--\s+/.freeze
         HUMAN_READABLE_PATTERN_2 = /^[A-Z], \[.*?\].*?--\s*:\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+/.freeze
 
+        # Pre-compiled pattern for basic log parsing (handles ANSI codes inline)
+        # Using [^\s\[]+ instead of .*? for level and logger name for better performance
+        BASIC_LOG_PATTERN = /^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+)\s+(\S+)\s+\[([^\]]*)\]\s*(\{[^}]*\}\s*)?(\([^)]*\)\s*)?(.+?)\s+--\s+(.+)$/
+
         LEVEL_MAP = {
           "T" => "trace",
           "D" => "debug",
@@ -26,7 +30,28 @@ module LogBench
 
         class << self
           def human_readable?(line)
-            line.match?(HUMAN_READABLE_PATTERN_1) || line.match?(HUMAN_READABLE_PATTERN_2)
+            human_readable_fast?(line)
+          end
+
+          # Fast check before expensive regex - most lines can be rejected quickly
+          def human_readable_fast?(line)
+            return false if line.empty?
+
+            first_byte = line.getbyte(0)
+
+            # Pattern 1: starts with digit (year: 2024-...)
+            if first_byte.between?(48, 57) # '0'-'9'
+              return line.match?(HUMAN_READABLE_PATTERN_1)
+            end
+
+            # Pattern 2: starts with uppercase letter (D, I, W, E, F for log levels)
+            if first_byte.between?(65, 90) # 'A'-'Z'
+              # Quick check: must have ", [" near the start
+              return false unless line.include?(", [")
+              return line.match?(HUMAN_READABLE_PATTERN_2)
+            end
+
+            false
           end
 
           def convert_to_json(line)
@@ -57,7 +82,7 @@ module LogBench
           private
 
           def convert_basic_log(line)
-            match = line.match(/^(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+)\s+(.*?)\s+\[(.*?)\]\s+(\{.*?\}\s+)?(\(.*?\)\s+)?(.*?)\s+--\s+(.+)$/)
+            match = line.match(BASIC_LOG_PATTERN)
             return nil unless match
 
             timestamp, level_raw, _thread_info, tags_raw, _duration_raw, logger_name_raw, message = match.captures

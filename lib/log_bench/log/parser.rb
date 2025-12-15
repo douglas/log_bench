@@ -5,13 +5,31 @@ module LogBench
     class Parser
       extend JobPrefixFormatter
 
-      def self.parse_line(raw_line)
-        clean_line = raw_line.encode("UTF-8", invalid: :replace, undef: :replace, replace: "").strip
+      def self.parse_line(raw_line, logger_type: nil, require_request_id: false)
+        # Skip empty lines and comments early
+        return nil if raw_line.nil? || raw_line.empty?
 
-        logger_type = LogBench.configuration&.logger_type || :lograge
-        if logger_type == :semantic_logger && Parsers::SemanticLoggerParser.human_readable?(clean_line)
-          json_line = Parsers::SemanticLoggerParser.convert_to_json(clean_line)
-          clean_line = json_line if json_line
+        first_char = raw_line.getbyte(0)
+        return nil if first_char == 35 # '#' comment
+
+        # Fast filter: skip lines without request_id if required
+        # This dramatically speeds up parsing large semantic_logger files
+        if require_request_id && !raw_line.include?("request_id")
+          return nil
+        end
+
+        clean_line = raw_line.encode("UTF-8", invalid: :replace, undef: :replace, replace: "").strip
+        return nil if clean_line.empty?
+
+        # Use cached logger_type or fetch once
+        logger_type ||= LogBench.configuration&.logger_type || :lograge
+
+        # For semantic_logger, only check human_readable if line doesn't start with '{'
+        if logger_type == :semantic_logger && first_char != 123 # '{'
+          if Parsers::SemanticLoggerParser.human_readable_fast?(clean_line)
+            json_line = Parsers::SemanticLoggerParser.convert_to_json(clean_line)
+            clean_line = json_line if json_line
+          end
         end
 
         data = JSON.parse(clean_line)
@@ -27,7 +45,14 @@ module LogBench
       end
 
       def self.parse_lines(lines)
-        lines.map { |line| parse_line(line) }.compact
+        # Cache logger_type once for all lines
+        logger_type = LogBench.configuration&.logger_type || :lograge
+
+        # For semantic_logger with large files, only parse lines with request_id
+        # This is safe because entries without request_id won't be associated with any request
+        require_request_id = logger_type == :semantic_logger && lines.size > 10_000
+
+        lines.filter_map { |line| parse_line(line, logger_type: logger_type, require_request_id: require_request_id) }
       end
 
       def self.group_by_request(entries)
