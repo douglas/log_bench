@@ -665,6 +665,20 @@ class TestLogBench < Minitest::Test
     assert_equal "abc123", entry.request_id
   end
 
+  def test_semantic_logger_named_tags_request_id_extraction
+    # Test that request_id is extracted from named_tags (SemanticLogger feature)
+    json_data = {
+      "timestamp" => "2025-12-15T18:48:24.378004Z",
+      "level" => "debug",
+      "name" => "Rack",
+      "message" => "Started",
+      "named_tags" => {"request_id" => "named-tag-123"},
+      "payload" => {"method" => "GET", "path" => "/"}
+    }
+    entry = LogBench::Log::Entry.new(json_data)
+    assert_equal "named-tag-123", entry.request_id
+  end
+
   def test_mixed_lograge_and_semantic_logger_parsing
     # Test that both formats can be parsed in the same collection
     mixed_logs = [

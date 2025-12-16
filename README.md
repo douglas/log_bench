@@ -120,7 +120,7 @@ if defined?(LogBench)
 end
 ```
 
-**3. Configure SemanticLogger for JSON output:**
+**3. Configure SemanticLogger for JSON output with request_id tracking:**
 
 ```ruby
 # config/environments/development.rb (or any environment)
@@ -128,10 +128,20 @@ Rails.application.configure do
   # Use JSON format for file appender
   config.rails_semantic_logger.format = :json
 
-  # Optional: Configure log level and other SemanticLogger options
+  # Optional: Configure log level
   config.log_level = :debug
+
+  # IMPORTANT: Add request_id to log tags (Rails 5+)
+  # This is the official rails_semantic_logger approach for request tracking
+  # See: https://logger.rocketjob.io/rails.html
+  config.log_tags = {
+    request_id: :request_id
+  }
+  # Note: Rails 4.2 users should use :uuid instead of :request_id
 end
 ```
+
+**Note:** The `config.log_tags` configuration is the official rails_semantic_logger approach for adding request tracking. It automatically includes the `request_id` in every log entry's `named_tags` field, which LogBench uses to correlate logs from the same HTTP request.
 
 **Why use SemanticLogger?**
 

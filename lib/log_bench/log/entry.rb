@@ -26,7 +26,9 @@ module LogBench
       attr_writer :type, :timestamp, :request_id, :content, :timing, :json_data
 
       def extract_request_id(json_data)
-        json_data["request_id"] || json_data.dig("payload", "request_id")
+        json_data["request_id"] ||
+          json_data.dig("payload", "request_id") ||
+          json_data.dig("named_tags", "request_id")
       end
 
       def parse_timestamp(timestamp_str)
